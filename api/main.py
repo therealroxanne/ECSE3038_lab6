@@ -4,18 +4,18 @@ from fastapi.responses import Response, JSONResponse
 from httpx import request
 import motor.motor_asyncio
 from bson import ObjectId
-"""import requests"""
 import pydantic
 from datetime import datetime
+
 app = FastAPI()
 
 
 origins = [
+    "http://localhost:8000"
     "https://temperature-sensing.onrender.com"
-    
 ]
 client=motor.motor_asyncio.AsyncIOMotorClient("mongodb+srv://Enginebot:XxGxwdO7zDzBH8hU@cluster1.h0ath04.mongodb.net/?retryWrites=true&w=majority")
-db= client.current_temp
+db= client.temperature_collection
 
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 
@@ -26,7 +26,6 @@ city_name="Kingston"
 
 endpoint ="https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}"
 response= request.get(endpoint)
-
 if response.status_code== 200:
      time= response.json()
      sunset_time=time['sys']['sunset']
@@ -45,9 +44,6 @@ async def get_states():
          fan_light_state["fan"]=True
      else:
          fan_light_state["fan"]=False
-
-     
-     
 
 app.put("/temperature", status_code=204)
 async def create_new_temp(request:Request):
