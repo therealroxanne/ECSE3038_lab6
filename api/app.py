@@ -17,12 +17,14 @@ db= client.current_temp
 
 pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 
+"""app.get()"""
+
 app.put("/temperature", status_code=204)
 async def create_new_temp(request:Request):
     temp_object= await request.json()
 
     new_temp= await db["temp_data"].insert_one(temp_object)
-    ready_temp= await db["temp_data"].find_one({"_temp": new_temp.inserted_temperature})
+    ready_temp= await db["temp_data"].find_one({"_id": new_temp.inserted_id})
 
     if ready_temp is not None:
          return ready_temp
