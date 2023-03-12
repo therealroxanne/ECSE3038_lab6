@@ -1,10 +1,11 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, JSONResponse
-from httpx import request
+"""from httpx import request"""
 import motor.motor_asyncio
 from bson import ObjectId
 import pydantic
+import requests
 from datetime import datetime
 
 app = FastAPI()
@@ -25,7 +26,7 @@ api_key="6998b79864a503ef23fa80755eac9689"
 city_name="Kingston"
 
 endpoint ="https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}"
-response= request.get(endpoint)
+response= requests.get(endpoint)
 if response.status_code== 200:
      time= response.json()
      sunset_time=time['sys']['sunset']
