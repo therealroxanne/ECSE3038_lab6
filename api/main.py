@@ -12,9 +12,16 @@ app = FastAPI()
 
 
 origins = [
-    "http://localhost:8000"
-    "https://temperature-sensing.onrender.com"
+    "http://127.0.0.1:8000"
+    #"https://temperature-sensing.onrender.com"
 ]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 client=motor.motor_asyncio.AsyncIOMotorClient("mongodb+srv://Enginebot:XxGxwdO7zDzBH8hU@cluster1.h0ath04.mongodb.net/?retryWrites=true&w=majority")
 db= client.temperature_collection
 
@@ -22,43 +29,49 @@ pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 
 current_time=datetime.now()
 
-api_key="6998b79864a503ef23fa80755eac9689"
+"""{api_key="6998b79864a503ef23fa80755eac9689"
 city_name="Kingston"
 
 endpoint ="https://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}"
 response= requests.get(endpoint)
 if response.status_code== 200:
      time= response.json()
-     sunset_time=time['sys']['sunset']
+     sunset_time=datetime['sys']['sunset']"""
 
+endpoint= "https://ecse-sunset-api.onrender.com/api/sunset"
+response= requests.get(endpoint)
+sunset= response.json()
+time= datetime.strptime(sunset["sunset"], "%Y-%m-%dT%H:%M:%S.%f")
 
-app.get("/api/state")
+app.get("/api/place")
 async def get_states():
-     fan_light_state= await db["state"].find().to_list(999)
+     fan_light_state= await db["state"].find_one()
     
-     if current_time>=sunset_time:
+     if current_time>=time:
          fan_light_state["light"]== True
      else:
          fan_light_state["light"]== False
     
-     if fan_light_state["temperature"]>"28.0":
+     if fan_light_state["temperature"]>28.0:
          fan_light_state["fan"]=True
      else:
          fan_light_state["fan"]=False
 
-app.put("/temperature", status_code=204)
+app.put("/api/place", status_code=204)
 async def create_new_temp(request:Request):
     temp_object= await request.json()
 
-    new_temp= await db["temperature"].insert_one(temp_object)
-    ready_temp= await db["temperature"].find_one({"_temp": new_temp.inserted_temp})
+    ready_temp= await db["state"].find_one({"temperature": "temp_object"})
 
-    if ready_temp is not None:
-         return ready_temp
-    
+    if ready_temp:
+
+        await db["state"].update_one({"temperature":"temp_object"},{'$set': temp_object})
     else:
-          raise HTTPException(status_code=400, detail="Bad Request")
-         
+        
+        await db["state"].insert_one({**temp_object,"temperature": "temp_object"})
+    
+    new_temp_object= await db["state"].find_one({"temperature":"temp_object"})
 
+    return new_temp_object
 
 """uvicorn api.main:app --reload"""
