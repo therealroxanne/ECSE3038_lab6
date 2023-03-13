@@ -1,4 +1,4 @@
-__pycache__
-venv
-.pio
-.vscode/
+api/__pycache__
+api/venv
+embedded/.pio
+embedded/.vscode/
